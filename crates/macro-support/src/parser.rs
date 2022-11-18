@@ -89,6 +89,7 @@ macro_rules! attrgen {
             (wasm_bindgen, WasmBindgen(Span, syn::Path)),
             (wasm_bindgen_futures, WasmBindgenFutures(Span, syn::Path)),
             (skip, Skip(Span)),
+            (skip_all, SkipAll(Span)),
             (typescript_type, TypeScriptType(Span, String, Span)),
             (getter_with_clone, GetterWithClone(Span)),
 
@@ -414,6 +415,7 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs)> for &'a mut syn::ItemStruct
             .map(|s| s.0.to_string())
             .unwrap_or(self.ident.to_string());
         let is_inspectable = attrs.inspectable().is_some();
+        let skip_all = attrs.skip_all().is_some();
         let getter_with_clone = attrs.getter_with_clone();
         for (i, field) in self.fields.iter_mut().enumerate() {
             match field.vis {
@@ -426,7 +428,7 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs)> for &'a mut syn::ItemStruct
             };
 
             let attrs = BindgenAttrs::find(&mut field.attrs)?;
-            if attrs.skip().is_some() {
+            if skip_all || attrs.skip().is_some() {
                 attrs.check_used();
                 continue;
             }
